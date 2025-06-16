@@ -52,7 +52,7 @@ O sistema testa todos e escolhe automaticamente o melhor!
 
 ### 1. Clonar Repositório
 ```bash
-git clone https://github.com/seu-usuario/face-recognition-sklearn.git
+git clone https://github.com/DenisSMorais2/Sistema-de-Reconhecimento-Facial---Scikit-learn.git
 cd face-recognition-sklearn
 ```
 
@@ -587,3 +587,12 @@ X_reduced = pca.fit_transform(X)
 - ✅ GPU disponível
 - ✅ Recursos computacionais abundantes
 - ✅ Aplicação crítica
+
+## Resultados
+### Minha foto:
+
+![Captura de tela 2025-06-16 121452](https://github.com/user-attachments/assets/92a5369f-a9b0-4652-abd1-aaf6a5248aea)
+
+### Outra pessoa sem direitos autorais:
+
+![no_face](https://github.com/user-attachments/assets/af99821c-d052-4d89-a43d-66baeec5c523)
