@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Reconhecimento Facial - Scikit-learn</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 50px 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #fafafa;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .preview-section {
+            display: none;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .image-preview {
+            max-width: 400px;
+            max-height: 400px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+        }
+
+        .analyze-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            margin: 30px 0;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .result.student {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .result.not-student {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .confidence-bar {
+            margin: 15px 0;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 20px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .confidence-fill.high {
+            background: linear-gradient(90deg, #28a745, #20c997);
+        }
+
+        .confidence-fill.medium {
+            background: linear-gradient(90deg, #ffc107, #fd7e14);
+        }
+
+        .confidence-fill.low {
+            background: linear-gradient(90deg, #dc3545, #c82333);
+        }
+
+        .model-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .model-info h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .info-item strong {
+            display: block;
+            color: #667eea;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .reset-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .upload-area {
+                padding: 30px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Reconhecimento Facial</h1>
+            <p>Powered by Scikit-learn & Machine Learning</p>
+        </div>
+        
+        <div class="content">
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📷</div>
+                    <div class="upload-text">Clique aqui ou arraste uma imagem</div>
+                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                        Escolher Imagem
+                    </button>
+                    <input type="file" id="fileInput" accept="image/*">
+                </div>
+            </div>
+            
+            <div class="preview-section" id="preview">
+                <img id="imagePreview" class="image-preview" alt="Preview da imagem">
+                <br>
+                <button class="analyze-btn" id="analyzeBtn" onclick="analyzeImage()">
+                    🔍 Analisar Imagem
+                </button>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analisando imagem com Machine Learning...</p>
+            </div>
+            
+            <div id="result" class="result">
+                <div id="resultMessage"></div>
+                <div class="confidence-bar">
+                    <div id="confidenceFill" class="confidence-fill"></div>
+                </div>
+                <div id="confidenceText"></div>
+                <button class="reset-btn" onclick="resetInterface()">📸 Nova Imagem</button>
+            </div>
+            
+            <div class="model-info" id="modelInfo" style="display: none;">
+                <h3>ℹ️ Informações do Modelo</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <strong id="modelType">-</strong>
+                        <span>Algoritmo</span>
+                    </div>
+                    <div class="info-item">
+                        <strong id="modelAccuracy">-</strong>
+                        <span>Precisão</span>
+                    </div>
+                    <div class="info-item">
+                        <strong id="studentProb">-</strong>
+                        <span>Prob. Aluno</span>
+                    </div>
+                    <div class="info-item">
+                        <strong id="otherProb">-</strong>
+                        <span>Prob. Outros</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentImageData = null;
+
+        // Elementos DOM
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const preview = document.getElementById('preview');
+        const imagePreview = document.getElementById('imagePreview');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        const resultMessage = document.getElementById('resultMessage');
+        const confidenceFill = document.getElementById('confidenceFill');
+        const confidenceText = document.getElementById('confidenceText');
+        const modelInfo = document.getElementById('modelInfo');
+
+        // Event listeners
+        fileInput.addEventListener('change', handleFileSelect);
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('drop', handleDrop);
+        uploadArea.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        uploadArea.addEventListener('dragleave', (e) => {
+            if (!uploadArea.contains(e.relatedTarget)) {
+                uploadArea.classList.remove('dragover');
+            }
+        });
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentImageData = e.target.result;
+                    imagePreview.src = currentImageData;
+                    preview.style.display = 'block';
+                    result.style.display = 'none';
+                    modelInfo.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                alert('Por favor, selecione um arquivo de imagem válido.');
+            }
+        }
+
+        async function analyzeImage() {
+            if (!currentImageData) {
+                alert('Por favor, selecione uma imagem primeiro.');
+                return;
+            }
+
+            // Mostrar loading
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            modelInfo.style.display = 'none';
+            analyzeBtn.disabled = true;
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        image: currentImageData
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showError(`Erro: ${data.error}`);
+                } else {
+                    showResult(data);
+                }
+
+            } catch (error) {
+                console.error('Erro:', error);
+                showError('Erro ao analisar a imagem. Verifique se o backend está rodando.');
+            } finally {
+                loading.style.display = 'none';
+                analyzeBtn.disabled = false;
+            }
+        }
+
+        function showResult(data) {
+            // Mostrar resultado principal
+            resultMessage.textContent = data.message;
+            result.className = data.is_student ? 'result student' : 'result not-student';
+            result.style.display = 'block';
+
+            // Barra de confiança
+            const confidence = data.confidence * 100;
+            confidenceFill.style.width = confidence + '%';
+            confidenceText.textContent = `Confiança: ${confidence.toFixed(1)}%`;
+
+            // Cor da barra baseada na confiança
+            if (confidence >= 80) {
+                confidenceFill.className = 'confidence-fill high';
+            } else if (confidence >= 60) {
+                confidenceFill.className = 'confidence-fill medium';
+            } else {
+                confidenceFill.className = 'confidence-fill low';
+            }
+
+            // Mostrar informações do modelo
+            if (data.model_info) {
+                document.getElementById('modelType').textContent = data.model_info.type || 'N/A';
+                document.getElementById('modelAccuracy').textContent = 
+                    data.model_info.accuracy ? (data.model_info.accuracy * 100).toFixed(1) + '%' : 'N/A';
+            }
+
+            if (data.probabilities) {
+                document.getElementById('studentProb').textContent = 
+                    (data.probabilities.student * 100).toFixed(1) + '%';
+                document.getElementById('otherProb').textContent = 
+                    (data.probabilities.others * 100).toFixed(1) + '%';
+            }
+
+            modelInfo.style.display = 'block';
+        }
+
+        function showError(message) {
+            resultMessage.textContent = message;
+            result.className = 'result not-student';
+            result.style.display = 'block';
+            confidenceFill.style.width = '0%';
+            confidenceText.textContent = '';
+        }
+
+        function resetInterface() {
+            currentImageData = null;
+            preview.style.display = 'none';
+            result.style.display = 'none';
+            modelInfo.style.display = 'none';
+            fileInput.value = '';
+        }
+
+        // Verificar saúde da API ao carregar
+        window.addEventListener('load', async function() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                
+                if (data.status === 'healthy') {
+                    console.log('✅ API está funcionando');
+                    console.log(`📊 Modelo: ${data.model_type}`);
+                    console.log(`🎯 Precisão: ${(data.accuracy * 100).toFixed(1)}%`);
+                } else {
+                    console.warn('⚠️ API com problemas:', data);
+                }
+            } catch (error) {
+                console.error('❌ Erro ao conectar com a API:', error);
+            }
+        });
+    </script>
+</body>
+</html>
