@@ -60,7 +60,7 @@ Seguindo este guia, você terá um sistema com **100% de accuracy** funcionando 
 
 ```bash
 # 1. Clonar repositório
-git clone https://github.com/seu-usuario/face-recognition-sklearn.git
+git clone https://github.com/DenisSMorais2/Sistema-de-Reconhecimento-Facial---Scikit-learn.git
 cd face-recognition-sklearn
 
 # 2. Instalar dependências (1 minuto)
